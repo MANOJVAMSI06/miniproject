@@ -212,3 +212,4 @@ const AddTransaction: React.FC<AddTransactionProps> = ({ onAddTransaction, theme
 };
 
 export default AddTransaction;
+
