@@ -6,12 +6,7 @@ import AddTransaction from './components/AddTransaction';
 import TransactionsList from './components/TransactionsList';
 import Navigation from './components/Navigation';
 import ThemeToggle from './components/ThemeToggle';
-
-const DEMO_USER: User = {
-  id: '1',
-  name: 'Alex Johnson',
-  email: 'alex@example.com'
-};
+import HomePage from './components/HomePage'; // ✅ New import
 
 const INITIAL_TRANSACTIONS: Transaction[] = [
   {
@@ -44,12 +39,11 @@ function App() {
   const [appState, setAppState] = useState<AppState>({
     transactions: INITIAL_TRANSACTIONS,
     currentUser: null,
-    currentView: 'auth',
+    currentView: 'home', // ✅ Start at Home page
     theme: 'light',
     authMode: 'login'
   });
 
-  // Load data from localStorage on mount
   useEffect(() => {
     const savedTheme = localStorage.getItem('expense-tracker-theme') as 'light' | 'dark';
     const savedTransactions = localStorage.getItem('expense-tracker-transactions');
@@ -60,11 +54,10 @@ function App() {
       theme: savedTheme || 'light',
       transactions: savedTransactions ? JSON.parse(savedTransactions) : INITIAL_TRANSACTIONS,
       currentUser: savedUser ? JSON.parse(savedUser) : null,
-      currentView: savedUser ? 'dashboard' : 'auth'
+      currentView: savedUser ? 'dashboard' : 'home' // ✅ Back to home if no user
     }));
   }, []);
 
-  // Save data to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('expense-tracker-theme', appState.theme);
     localStorage.setItem('expense-tracker-transactions', JSON.stringify(appState.transactions));
@@ -73,7 +66,6 @@ function App() {
     }
   }, [appState.theme, appState.transactions, appState.currentUser]);
 
-  // Apply theme to document
   useEffect(() => {
     if (appState.theme === 'dark') {
       document.documentElement.classList.add('dark');
@@ -83,7 +75,6 @@ function App() {
   }, [appState.theme]);
 
   const handleAuth = (userData: { name?: string; email: string; password: string }) => {
-    // Demo authentication - in real app, you'd validate credentials
     const user: User = {
       id: Date.now().toString(),
       name: userData.name || userData.email.split('@')[0],
@@ -102,7 +93,7 @@ function App() {
     setAppState(prev => ({
       ...prev,
       currentUser: null,
-      currentView: 'auth',
+      currentView: 'home',
       authMode: 'login'
     }));
   };
@@ -124,7 +115,7 @@ function App() {
     setAppState(prev => ({
       ...prev,
       transactions: [newTransaction, ...prev.transactions],
-      currentView: 'dashboard' // Redirect to dashboard after adding
+      currentView: 'dashboard'
     }));
   };
 
@@ -148,6 +139,17 @@ function App() {
 
   const renderCurrentView = () => {
     switch (appState.currentView) {
+      case 'home':
+        return (
+          <HomePage
+            onLoginClick={() =>
+              setAppState(prev => ({ ...prev, currentView: 'auth', authMode: 'login' }))
+            }
+            onSignupClick={() =>
+              setAppState(prev => ({ ...prev, currentView: 'auth', authMode: 'register' }))
+            }
+          />
+        );
       case 'auth':
         return (
           <AuthForm
@@ -188,12 +190,10 @@ function App() {
 
   return (
     <div className={`min-h-screen ${bgClass} transition-colors duration-300`}>
-      {/* Theme Toggle - Always visible */}
       <div className="fixed top-4 right-4 z-50">
         <ThemeToggle theme={appState.theme} onToggle={handleToggleTheme} />
       </div>
 
-      {/* Navigation - Only show when logged in */}
       {appState.currentUser && (
         <Navigation
           currentView={appState.currentView}
@@ -203,7 +203,6 @@ function App() {
         />
       )}
 
-      {/* Main Content */}
       <main className={`${appState.currentUser ? 'pt-8 pb-8 px-4 sm:px-6 lg:px-8' : ''}`}>
         <div className={`${appState.currentUser ? 'max-w-7xl mx-auto' : ''}`}>
           {renderCurrentView()}
